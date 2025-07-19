@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミリしらメーカー</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvasライブラリを読み込み（シートを画像化するため） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* 印刷時や画像化する際に不要な要素を非表示にする */
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                background-color: #fff;
+            }
+            #sheet {
+                box-shadow: none;
+                border: none;
+            }
+        }
+        /* プレースホルダーのスタイル */
+        .image-placeholder {
+            cursor: pointer;
+            transition: background-color 0.3s;
+            /* 背景画像のスタイルを追加 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .image-placeholder:hover {
+            background-color: #e0e0e0;
+        }
+        /* 入力フィールドのスタイル */
+        .styled-input, .styled-textarea {
+            border: 1px solid #d1d5db;
+            background-color: #fff;
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+        .styled-input {
+            height: 30px;
+            border-radius: 4px;
+        }
+        .styled-textarea {
+            height: 80px;
+            resize: none;
+            border-radius: 4px;
+        }
+        /* ファイル入力ボタンのカスタムスタイル */
+        .custom-file-button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .custom-file-button:hover {
+            background-color: #4338ca;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- 操作パネル -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-8 no-print">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">ミリしらメーカー</h1>
+            
+            <!-- タイトル設定 -->
+            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+                <legend class="text-lg font-semibold text-gray-800 px-2">1. タイトル設定</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label for="title-text" class="block text-sm font-medium text-gray-700 mb-1">作品タイトル (テキスト)</label>
+                        <input type="text" id="title-text" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="ここにタイトルを入力">
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <div class="flex-grow">
+                            <label for="title-image" class="block text-sm font-medium text-gray-700 mb-1">タイトル画像 (ロゴなど)</label>
+                            <input type="file" id="title-image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
+                        </div>
+                        <button id="clear-title-image-btn" class="px-3 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-sm hover:bg-red-600 text-sm" title="タイトル画像を消去">消去</button>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- キャラクター数設定 -->
+            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+                <legend class="text-lg font-semibold text-gray-800 px-2">2. キャラクター数設定</legend>
+                <div class="flex items-center justify-center gap-4 mt-4">
+                    <span class="text-sm font-medium text-gray-700">キャラクター数:</span>
+                    <button id="remove-card-btn" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">-</button>
+                    <span id="card-count" class="text-lg font-bold">8</span>
+                    <button id="add-card-btn" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">+</button>
+                </div>
+            </fieldset>
+
+            <!-- プロジェクト管理 -->
+            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+                <legend class="text-lg font-semibold text-gray-800 px-2">3. プロジェクト管理</legend>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
+                    <button id="save-project-btn" class="w-full md:w-auto custom-file-button bg-teal-600 hover:bg-teal-700">プロジェクトを保存</button>
+                    <label for="load-project-input" class="w-full md:w-auto custom-file-button">プロジェクトを読込</label>
+                    <input type="file" id="load-project-input" class="hidden" accept=".json">
+                </div>
+            </fieldset>
+
+            <!-- ダウンロード -->
+            <fieldset class="border-t border-gray-200 pt-4">
+                 <legend class="text-lg font-semibold text-gray-800 px-2">4. 完成</legend>
+                <div class="text-center mt-4">
+                    <button id="download-btn" class="w-full md:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
+                        完成したシートを画像としてダウンロード
+                    </button>
+                </div>
+            </fieldset>
+        </div>
+
+        <!-- ミリしらシート本体 -->
+        <div id="sheet" class="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
+            <!-- ヘッダー -->
+            <header class="flex justify-between items-center border-b-2 border-gray-400 pb-4 mb-6">
+                <div id="sheet-title" class="text-3xl sm:text-4xl font-bold text-gray-800">ミリしらシート</div>
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-700">やった人:</span>
+                    <input type="text" id="player-name" class="border-b-2 border-gray-400 focus:outline-none w-32 sm:w-48">
+                </div>
+            </header>
+
+            <!-- キャラクターグリッド (デフォルトは4列) -->
+            <main id="character-grid" class="grid grid-cols-4 gap-4">
+                <!-- キャラクターカードはJavaScriptでここに追加されます -->
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // === DOM要素の取得 ===
+        const titleTextInput = document.getElementById('title-text');
+        const titleImageInput = document.getElementById('title-image');
+        const clearTitleImageBtn = document.getElementById('clear-title-image-btn');
+        const sheetTitle = document.getElementById('sheet-title');
+        const playerNameInput = document.getElementById('player-name');
+        
+        const addCardBtn = document.getElementById('add-card-btn');
+        const removeCardBtn = document.getElementById('remove-card-btn');
+        const cardCountSpan = document.getElementById('card-count');
+        const characterGrid = document.getElementById('character-grid');
+        
+        const saveProjectBtn = document.getElementById('save-project-btn');
+        const loadProjectInput = document.getElementById('load-project-input');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // === 機能の実装 ===
+
+        // 1. タイトル設定機能
+        titleTextInput.addEventListener('input', (e) => {
+            const text = e.target.value;
+            sheetTitle.innerHTML = ''; // 画像をクリア
+            sheetTitle.textContent = text || 'ミリしらシート';
+        });
+
+        titleImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    sheetTitle.innerHTML = ''; // テキストをクリア
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'max-h-16 w-auto';
+                    sheetTitle.appendChild(img);
+                    titleTextInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        clearTitleImageBtn.addEventListener('click', () => {
+            sheetTitle.innerHTML = '';
+            sheetTitle.textContent = titleTextInput.value || 'ミリしらシート';
+            titleImageInput.value = ''; // ファイル選択をリセット
+        });
+
+        // 2. キャラクターカード作成機能
+        const createCharacterCard = () => {
+            const card = document.createElement('div');
+            card.className = 'border border-gray-300 rounded-md p-2 flex flex-col gap-2';
+            card.innerHTML = `
+                <div class="image-placeholder w-full h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 overflow-hidden">
+                    <span class="text-xs text-center">クリックして画像を選択</span>
+                </div>
+                <input type="file" accept="image/*" class="hidden">
+                <input type="text" class="styled-input">
+                <textarea class="styled-textarea"></textarea>
+            `;
+            
+            const imagePlaceholder = card.querySelector('.image-placeholder');
+            const fileInput = card.querySelector('input[type="file"]');
+            const placeholderText = card.querySelector('span');
+
+            imagePlaceholder.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePlaceholder.style.backgroundImage = `url('${event.target.result}')`;
+                        placeholderText.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            return card;
+        };
+        
+        // 3. カード数の増減機能
+        const updateCardCount = () => {
+            cardCountSpan.textContent = characterGrid.children.length;
+        };
+
+        addCardBtn.addEventListener('click', () => {
+            characterGrid.appendChild(createCharacterCard());
+            updateCardCount();
+        });
+
+        removeCardBtn.addEventListener('click', () => {
+            if (characterGrid.children.length > 1) {
+                characterGrid.removeChild(characterGrid.lastChild);
+                updateCardCount();
+            }
+        });
+
+
+        // 4. プロジェクト保存機能
+        saveProjectBtn.addEventListener('click', () => {
+            const cardsData = [];
+            const cardElements = characterGrid.querySelectorAll('.border');
+            cardElements.forEach(card => {
+                const imageSrc = card.querySelector('.image-placeholder').style.backgroundImage.slice(5, -2); // url("...") からURL部分を抽出
+                const name = card.querySelector('.styled-input').value;
+                const description = card.querySelector('.styled-textarea').value;
+                cardsData.push({ imageSrc, name, description });
+            });
+
+            const projectData = {
+                titleText: titleTextInput.value,
+                titleImageHTML: sheetTitle.querySelector('img') ? sheetTitle.innerHTML : null,
+                playerName: playerNameInput.value,
+                cards: cardsData
+            };
+
+            const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'mirishira-project.json';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        });
+
+        // 5. プロジェクト読み込み機能
+        loadProjectInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const projectData = JSON.parse(event.target.result);
+                    
+                    // データをUIに反映
+                    titleTextInput.value = projectData.titleText || '';
+                    if (projectData.titleImageHTML) {
+                        sheetTitle.innerHTML = projectData.titleImageHTML;
+                    } else {
+                        sheetTitle.textContent = projectData.titleText || 'ミリしらシート';
+                    }
+                    
+                    playerNameInput.value = projectData.playerName || '';
+
+                    characterGrid.innerHTML = ''; // グリッドをクリア
+                    projectData.cards.forEach(cardData => {
+                        const newCard = createCharacterCard();
+                        if (cardData.imageSrc) {
+                            newCard.querySelector('.image-placeholder').style.backgroundImage = `url('${cardData.imageSrc}')`;
+                            newCard.querySelector('span').classList.add('hidden');
+                        }
+                        newCard.querySelector('.styled-input').value = cardData.name;
+                        newCard.querySelector('.styled-textarea').value = cardData.description;
+                        characterGrid.appendChild(newCard);
+                    });
+                    updateCardCount();
+
+                } catch (error) {
+                    console.error("プロジェクトファイルの読み込みに失敗しました:", error);
+                    alert("無効なプロジェクトファイルです。");
+                }
+            };
+            reader.readAsText(file);
+            loadProjectInput.value = ''; // 同じファイルを再度選択できるようにリセット
+        });
+
+        // 6. 画像ダウンロード機能
+        downloadBtn.addEventListener('click', () => {
+            downloadBtn.textContent = '画像生成中...';
+            downloadBtn.disabled = true;
+
+            html2canvas(document.getElementById('sheet'), {
+                scale: 2, 
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'mirishira_sheet.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error('画像生成に失敗しました。', err);
+                alert('エラーが発生しました。コンソールを確認してください。');
+            }).finally(() => {
+                downloadBtn.textContent = '完成したシートを画像としてダウンロード';
+                downloadBtn.disabled = false;
+            });
+        });
+
+        // 初期化
+        const initializeGrid = (initialCount) => {
+            for (let i = 0; i < initialCount; i++) {
+                characterGrid.appendChild(createCharacterCard());
+            }
+            updateCardCount();
+        };
+        initializeGrid(8); // 最初は8個のカードで開始
+    </script>
+</body>
+</html>
