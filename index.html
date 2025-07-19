@@ -34,9 +34,9 @@
         .image-placeholder:hover {
             background-color: #e0e0e0;
         }
-        /* 入力フィールドのスタイル */
+        /* 入力フィールドのスタイル (線の色を濃く変更) */
         .styled-input, .styled-textarea {
-            border: 1px solid #d1d5db;
+            border: 1px solid #9CA3AF; /* gray-400 */
             background-color: #fff;
             width: 100%;
             padding: 4px 8px;
@@ -74,7 +74,7 @@
             <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">ミリしらメーカー</h1>
             
             <!-- タイトル設定 -->
-            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+            <fieldset class="border-t border-gray-300 pt-4 mb-6">
                 <legend class="text-lg font-semibold text-gray-800 px-2">1. タイトル設定</legend>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
@@ -92,7 +92,7 @@
             </fieldset>
 
             <!-- キャラクター数設定 -->
-            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+            <fieldset class="border-t border-gray-300 pt-4 mb-6">
                 <legend class="text-lg font-semibold text-gray-800 px-2">2. キャラクター数設定</legend>
                 <div class="flex items-center justify-center gap-4 mt-4">
                     <span class="text-sm font-medium text-gray-700">キャラクター数:</span>
@@ -103,7 +103,7 @@
             </fieldset>
 
             <!-- プロジェクト管理 -->
-            <fieldset class="border-t border-gray-200 pt-4 mb-6">
+            <fieldset class="border-t border-gray-300 pt-4 mb-6">
                 <legend class="text-lg font-semibold text-gray-800 px-2">3. プロジェクト管理</legend>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 mt-4">
                     <button id="save-project-btn" class="w-full md:w-auto custom-file-button bg-teal-600 hover:bg-teal-700">プロジェクトを保存</button>
@@ -113,7 +113,7 @@
             </fieldset>
 
             <!-- ダウンロード -->
-            <fieldset class="border-t border-gray-200 pt-4">
+            <fieldset class="border-t border-gray-300 pt-4">
                  <legend class="text-lg font-semibold text-gray-800 px-2">4. 完成</legend>
                 <div class="text-center mt-4">
                     <button id="download-btn" class="w-full md:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
@@ -125,12 +125,12 @@
 
         <!-- ミリしらシート本体 -->
         <div id="sheet" class="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
-            <!-- ヘッダー -->
-            <header class="flex justify-between items-center border-b-2 border-gray-400 pb-4 mb-6">
+            <!-- ヘッダー (線の色を濃く変更) -->
+            <header class="flex justify-between items-center border-b-2 border-gray-600 pb-4 mb-6">
                 <div id="sheet-title" class="text-3xl sm:text-4xl font-bold text-gray-800">ミリしらシート</div>
                 <div class="flex items-center gap-2">
                     <span class="font-semibold text-gray-700">やった人:</span>
-                    <input type="text" id="player-name" class="border-b-2 border-gray-400 focus:outline-none w-32 sm:w-48">
+                    <input type="text" id="player-name" class="border-b-2 border-gray-600 focus:outline-none w-32 sm:w-48">
                 </div>
             </header>
 
@@ -189,10 +189,10 @@
             titleImageInput.value = ''; // ファイル選択をリセット
         });
 
-        // 2. キャラクターカード作成機能
+        // 2. キャラクターカード作成機能 (線の色を濃く変更)
         const createCharacterCard = () => {
             const card = document.createElement('div');
-            card.className = 'border border-gray-300 rounded-md p-2 flex flex-col gap-2';
+            card.className = 'border border-gray-500 rounded-md p-2 flex flex-col gap-2';
             card.innerHTML = `
                 <div class="image-placeholder w-full h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 overflow-hidden">
                     <span class="text-xs text-center">クリックして画像を選択</span>
