@@ -23,6 +23,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2canvas (画像化ライブラリ) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="vendor/purify.min.js"></script>
     <!-- SortableJS (ドラッグ&ドロップライブラリ) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <!-- Google Fonts Link (動的に変更) -->
@@ -434,7 +435,16 @@
                     
                     titleTextInput.value = data.titleText || '';
                     logoSuffixTextInput.value = data.logoSuffixText !== undefined ? data.logoSuffixText : 'ミリしらテンプレ';
-                    sheetTitle.innerHTML = data.titleHTML || 'ミリしらシート';
+                    if (!window.DOMPurify || !window.DOMPurify.isSupported) {
+                        throw new Error('安全なプロジェクト読み込みに必要なライブラリを読み込めませんでした。');
+                    }
+                    // Existing projects can contain a logo image and a text suffix.
+                    sheetTitle.innerHTML = DOMPurify.sanitize(String(data.titleHTML || 'ミリしらシート'), {
+                        ALLOWED_TAGS: ['img', 'span', 'br'],
+                        ALLOWED_ATTR: ['src', 'alt', 'title', 'class'],
+                        ALLOW_DATA_ATTR: false,
+                        ALLOW_ARIA_ATTR: false
+                    });
                     playerNameInput.value = data.playerName || '';
                     borderWidthSlider.value = data.borderWidth || 1;
                     borderWidthSlider.dispatchEvent(new Event('input'));
@@ -494,3 +504,4 @@
     </script>
 </body>
 </html>
+
